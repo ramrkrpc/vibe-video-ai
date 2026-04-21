@@ -14,7 +14,167 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          heygen_api_key: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          heygen_api_key?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          heygen_api_key?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      templates: {
+        Row: {
+          avatar_id: string | null
+          category: string | null
+          created_at: string
+          description: string | null
+          duration_label: string | null
+          id: string
+          is_public: boolean | null
+          script: string | null
+          title: string
+          voice_id: string | null
+        }
+        Insert: {
+          avatar_id?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          duration_label?: string | null
+          id?: string
+          is_public?: boolean | null
+          script?: string | null
+          title: string
+          voice_id?: string | null
+        }
+        Update: {
+          avatar_id?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          duration_label?: string | null
+          id?: string
+          is_public?: boolean | null
+          script?: string | null
+          title?: string
+          voice_id?: string | null
+        }
+        Relationships: []
+      }
+      videos: {
+        Row: {
+          aspect_ratio: string | null
+          avatar_id: string | null
+          created_at: string
+          duration_seconds: number | null
+          error_message: string | null
+          heygen_video_id: string | null
+          id: string
+          project_id: string | null
+          resolution: string | null
+          script: string | null
+          status: Database["public"]["Enums"]["video_status"]
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          video_url: string | null
+          voice_id: string | null
+        }
+        Insert: {
+          aspect_ratio?: string | null
+          avatar_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          error_message?: string | null
+          heygen_video_id?: string | null
+          id?: string
+          project_id?: string | null
+          resolution?: string | null
+          script?: string | null
+          status?: Database["public"]["Enums"]["video_status"]
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+          voice_id?: string | null
+        }
+        Update: {
+          aspect_ratio?: string | null
+          avatar_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          error_message?: string | null
+          heygen_video_id?: string | null
+          id?: string
+          project_id?: string | null
+          resolution?: string | null
+          script?: string | null
+          status?: Database["public"]["Enums"]["video_status"]
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+          voice_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +183,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      video_status: "draft" | "processing" | "completed" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +310,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      video_status: ["draft", "processing", "completed", "failed"],
+    },
   },
 } as const
