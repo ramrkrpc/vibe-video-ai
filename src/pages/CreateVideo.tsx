@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Mic, Settings2, Play, Loader2, Wand2, Monitor, Smartphone, ChevronRight, ChevronLeft, Check, Volume2 } from "lucide-react";
+import { User, Mic, Settings2, Play, Loader2, Wand2, Monitor, Smartphone, ChevronRight, ChevronLeft, Check, Volume2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +14,7 @@ import { useCreateVideo } from "@/hooks/use-videos";
 import { useVoices, type HeyGenVoice } from "@/hooks/use-voices";
 import { useAvatars, type HeyGenAvatar } from "@/hooks/use-avatars";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 const steps = ["Avatar", "Script", "Voice & Settings", "Review"];
 
@@ -35,8 +36,10 @@ const CreateVideo = () => {
   const [voiceSearch, setVoiceSearch] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const { data: avatars, isLoading: avatarsLoading } = useAvatars();
-  const { data: voices, isLoading: voicesLoading } = useVoices();
+  const { data: avatars, isLoading: avatarsLoading, error: avatarsError } = useAvatars();
+  const { data: voices, isLoading: voicesLoading, error: voicesError } = useVoices();
+
+  const apiKeyMissing = avatarsError?.message?.includes("API key") || voicesError?.message?.includes("API key");
 
   const filteredAvatars = (avatars || []).filter((a) =>
     a.avatar_name?.toLowerCase().includes(avatarSearch.toLowerCase())
@@ -88,6 +91,24 @@ const CreateVideo = () => {
       default: return true;
     }
   };
+
+  if (apiKeyMissing) {
+    return (
+      <div className="max-w-5xl">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Create Video</h1>
+          <p className="text-muted-foreground mt-1">Generate an AI video with a talking avatar</p>
+        </div>
+        <EmptyState
+          icon={AlertCircle}
+          title="HeyGen API Key Required"
+          description="Add your HeyGen API key in Settings to start creating videos."
+          actionLabel="Go to Settings"
+          onAction={() => navigate("/settings")}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl space-y-6">
