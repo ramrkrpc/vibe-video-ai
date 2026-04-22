@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Mic, Settings2, Play, Loader2, Wand2, Monitor, Smartphone, ChevronRight, ChevronLeft, Check, Volume2, AlertCircle } from "lucide-react";
+import { User, Mic, Settings2, Play, Loader2, Wand2, Monitor, Smartphone, ChevronRight, ChevronLeft, Check, Volume2, AlertCircle, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +15,9 @@ import { useVoices, type HeyGenVoice } from "@/hooks/use-voices";
 import { useAvatars, type HeyGenAvatar } from "@/hooks/use-avatars";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { BackgroundPicker, type BackgroundConfig } from "@/components/BackgroundPicker";
+import { AIScriptGenerator } from "@/components/AIScriptGenerator";
+import { SaveAsTemplate } from "@/components/SaveAsTemplate";
 
 const steps = ["Avatar", "Script", "Voice & Settings", "Review"];
 
@@ -34,6 +37,7 @@ const CreateVideo = () => {
   const [ratio, setRatio] = useState("16:9");
   const [avatarSearch, setAvatarSearch] = useState("");
   const [voiceSearch, setVoiceSearch] = useState("");
+  const [background, setBackground] = useState<BackgroundConfig>({ type: "none", value: "" });
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { data: avatars, isLoading: avatarsLoading, error: avatarsError } = useAvatars();
@@ -68,6 +72,7 @@ const CreateVideo = () => {
         voice_id: voice,
         resolution,
         aspect_ratio: ratio,
+        background: background.type !== "none" ? background : undefined,
       });
       toast.success("Video generation started! Check My Videos for progress.");
       navigate("/videos");
@@ -191,6 +196,11 @@ const CreateVideo = () => {
               )}
             </CardContent>
           </Card>
+          <Card className="glass mt-4">
+            <CardContent className="pt-6">
+              <BackgroundPicker background={background} onChange={setBackground} />
+            </CardContent>
+          </Card>
         </motion.div>
       )}
 
@@ -209,12 +219,15 @@ const CreateVideo = () => {
                 <Input placeholder="Enter a title for your video" value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1" />
               </div>
               <div>
-                <Label>Script</Label>
+                <div className="flex items-center justify-between mb-1">
+                  <Label>Script</Label>
+                  <AIScriptGenerator onGenerated={(s) => setScript(s)} />
+                </div>
                 <Textarea
                   placeholder="Type your video script here... The avatar will speak this text."
                   value={script}
                   onChange={(e) => setScript(e.target.value)}
-                  className="min-h-[200px] resize-none mt-1"
+                  className="min-h-[200px] resize-none"
                 />
                 <div className="flex justify-between mt-2 text-xs text-muted-foreground">
                   <span>{wordCount} words</span>
@@ -330,8 +343,9 @@ const CreateVideo = () => {
       {step === 3 && (
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card className="glass">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Review</CardTitle>
+              <SaveAsTemplate title={title} script={script} avatarId={selectedAvatarId} voiceId={voice} />
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3 text-sm">
@@ -342,6 +356,15 @@ const CreateVideo = () => {
                 <div className="flex justify-between"><span className="text-muted-foreground">Aspect Ratio</span><span className="text-foreground">{ratio}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Est. Duration</span><span className="text-foreground">~{estimatedDuration}s</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Words</span><span className="text-foreground">{wordCount}</span></div>
+                {background.type !== "none" && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Background</span>
+                    <span className="text-foreground capitalize flex items-center gap-2">
+                      {background.type === "color" && <span className="w-4 h-4 rounded border border-border inline-block" style={{ backgroundColor: background.value }} />}
+                      {background.type === "color" ? background.value : "Image"}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="border-t border-border pt-3">
                 <p className="text-xs text-muted-foreground mb-1">Script Preview</p>
@@ -352,7 +375,10 @@ const CreateVideo = () => {
           <div className="space-y-4">
             <Card className="glass">
               <CardContent className="pt-6">
-                <div className="aspect-video rounded-lg bg-secondary flex items-center justify-center overflow-hidden">
+                <div
+                  className="aspect-video rounded-lg bg-secondary flex items-center justify-center overflow-hidden"
+                  style={background.type === "color" ? { backgroundColor: background.value } : background.type === "image" ? { backgroundImage: `url(${background.value})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}
+                >
                   {selectedAvatarImg ? (
                     <img src={selectedAvatarImg} alt={selectedAvatarName} className="h-full object-cover" />
                   ) : (

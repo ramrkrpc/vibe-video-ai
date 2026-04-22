@@ -79,6 +79,7 @@ export type Database = {
           is_public: boolean | null
           script: string | null
           title: string
+          user_id: string | null
           voice_id: string | null
         }
         Insert: {
@@ -91,6 +92,7 @@ export type Database = {
           is_public?: boolean | null
           script?: string | null
           title: string
+          user_id?: string | null
           voice_id?: string | null
         }
         Update: {
@@ -103,6 +105,7 @@ export type Database = {
           is_public?: boolean | null
           script?: string | null
           title?: string
+          user_id?: string | null
           voice_id?: string | null
         }
         Relationships: []
