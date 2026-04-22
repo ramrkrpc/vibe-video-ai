@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Play, Download, Trash2, Share2, MoreVertical, Search, Grid, List, Video, ExternalLink } from "lucide-react";
+import { Play, Download, Trash2, Share2, MoreVertical, Search, Grid, List, Video, ExternalLink, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useVideos, useDeleteVideo } from "@/hooks/use-videos";
+import { useVideos, useDeleteVideo, useShareVideo } from "@/hooks/use-videos";
 import { VideoGridSkeleton } from "@/components/PageSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { useNavigate } from "react-router-dom";
@@ -32,7 +32,9 @@ const MyVideos = () => {
   const [selectedVideo, setSelectedVideo] = useState<VideoRow | null>(null);
   const { data: videos, isLoading } = useVideos();
   const deleteVideo = useDeleteVideo();
+  const shareVideo = useShareVideo();
   const navigate = useNavigate();
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const filtered = (videos || []).filter((v) =>
     v.title.toLowerCase().includes(search.toLowerCase())
@@ -69,6 +71,20 @@ const MyVideos = () => {
       window.open(video.video_url, "_blank");
     } else {
       toast.error("Video not ready for download");
+    }
+  };
+
+  const handleShare = async (video: VideoRow, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    try {
+      const result = await shareVideo.mutateAsync({ videoId: video.id, shared: true });
+      const shareUrl = `${window.location.origin}/share/${(result as any).share_token}`;
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedId(video.id);
+      setTimeout(() => setCopiedId(null), 2000);
+      toast.success("Share link copied to clipboard!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to share video");
     }
   };
 
