@@ -7,10 +7,14 @@ import {
   Settings,
   LogOut,
   Sparkles,
+  Plus,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/use-profile";
+import { useNavigate } from "react-router-dom";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -35,8 +39,11 @@ const navItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
   const { signOut, user } = useAuth();
+  const { data: profile } = useProfile();
+  const navigate = useNavigate();
+
+  const initials = (profile?.full_name || user?.email || "U").slice(0, 2).toUpperCase();
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -48,6 +55,19 @@ export function AppSidebar() {
           <span className="text-lg font-bold text-foreground">HeyGen AI</span>
         )}
       </div>
+
+      {/* Quick Create */}
+      {!collapsed && (
+        <div className="px-3 mb-2">
+          <Button
+            className="w-full gradient-primary justify-start"
+            size="sm"
+            onClick={() => navigate("/create")}
+          >
+            <Plus className="w-4 h-4 mr-2" /> New Video
+          </Button>
+        </div>
+      )}
 
       <SidebarContent>
         <SidebarGroup>
@@ -74,9 +94,15 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-3">
-        {!collapsed && user && (
-          <div className="px-2 py-1 mb-2 text-xs text-muted-foreground truncate">
-            {user.email}
+        {!collapsed && (
+          <div className="flex items-center gap-3 px-2 py-2 mb-2 rounded-lg bg-sidebar-accent/30">
+            <Avatar className="w-8 h-8">
+              <AvatarFallback className="bg-primary/10 text-primary text-xs">{initials}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground truncate">{profile?.full_name || "User"}</p>
+              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            </div>
           </div>
         )}
         <SidebarMenu>
