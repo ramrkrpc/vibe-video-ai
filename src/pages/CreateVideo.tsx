@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Mic, Settings2, Play, Loader2, Wand2, Monitor, Smartphone, ChevronRight, ChevronLeft, Check, Volume2, AlertCircle } from "lucide-react";
+import { User, Mic, Settings2, Play, Loader2, Wand2, Monitor, Smartphone, ChevronRight, ChevronLeft, Check, Volume2, AlertCircle, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +15,8 @@ import { useVoices, type HeyGenVoice } from "@/hooks/use-voices";
 import { useAvatars, type HeyGenAvatar } from "@/hooks/use-avatars";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { AIScriptGenerator } from "@/components/AIScriptGenerator";
+import { SaveAsTemplate } from "@/components/SaveAsTemplate";
 
 const steps = ["Avatar", "Script", "Voice & Settings", "Review"];
 
