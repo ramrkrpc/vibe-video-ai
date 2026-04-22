@@ -1,156 +1,120 @@
 
 
-# Gap Analysis: Your App vs app.heygen.ai
+# Cheaper API Alternatives: Video, TTS, and Lip Sync
 
-## What You Have (Working)
-- Auth (email + Google OAuth + forgot password)
-- Dashboard with stats, recent videos, API key warning
-- 4-step video creation wizard (Avatar > Script > Voice > Review)
-- Avatar browsing with search and detail modal
-- Voice selection with preview playback
-- Video management (grid/list view, search, delete, share, download)
-- Video playback modal with status handling
-- Templates page (8 fallback templates)
-- Settings (profile, API key, password reset)
-- Edge functions for HeyGen API (avatars, voices, create, status poll)
-- Share via token with public route
-- Command palette (Cmd+K)
-- Dark theme with glass morphism design
-- Skeleton loading states throughout
+## Research Summary
+
+Your app currently depends entirely on HeyGen for avatars, voices, and video generation. HeyGen is expensive ($0.01-0.033/sec of video, ~$5.88/min on pay-as-you-go) and requires a paid API key to even load the app. Here are cheaper, faster, higher-quality alternatives organized by function.
 
 ---
 
-## Gaps Compared to app.heygen.ai
+## 1. Text-to-Speech (Replacing HeyGen voices)
 
-### 1. Interactive Avatar / Photo Avatar Upload
-**HeyGen has:** Upload a photo to create a custom avatar, or use Interactive Avatars (real-time streaming). Your app only lists pre-built avatars from the API.
-**Fix:** Add a "Create Avatar" flow with photo upload via HeyGen's `/v2/photo_avatar` endpoint, and a section for "My Avatars" vs "Public Avatars" tabs.
+| Provider | Pricing | Latency | Quality | Notes |
+|----------|---------|---------|---------|-------|
+| **Fish Audio** | $0.015/1K chars (pay-as-you-go), 50% cheaper than ElevenLabs | ~200ms | High -- natural, expressive | Voice cloning included. REST API. Best value pick. |
+| **Deepgram Aura** | $0.030/1K chars | <200ms (fastest) | Good -- optimized for agents | Best for real-time/conversational. REST API. |
+| **Cartesia Sonic 3** | Free tier (10K chars/day), then $0.040/1K | 40-90ms TTFA | Excellent -- laughs, emotes | Ultra-low latency streaming. Best speed. |
+| **ElevenLabs** | $0.030/1K chars (Starter $5/mo) | ~300ms | Excellent -- industry benchmark | Available as Lovable connector. Most polished. |
+| **OpenAI TTS** | $0.015/1K chars | ~400ms | Good | Simple API, limited voice control. |
 
-### 2. Avatar Grouping and Filtering
-**HeyGen has:** Avatars organized by categories (Studio, Instant, Photo), gender filters, and "Favorites" bookmarks.
-**Fix:** Add category tabs (All / Studio / Instant / Photo), gender filter chips, and a favorites toggle that persists to the database.
-
-### 3. Video Editor / Scene Builder
-**HeyGen has:** A multi-scene video editor where you can add multiple scenes, each with different avatars, backgrounds, text overlays, and transitions. Your app only supports a single-scene, single-script flow.
-**Fix:** Build a scene-based editor component where users can add/remove/reorder scenes, each with its own avatar, script segment, and optional background image.
-
-### 4. Background Selection
-**HeyGen has:** Choose or upload custom backgrounds for each scene (solid colors, stock images, uploaded images).
-**Fix:** Add a background picker step in the creation wizard with color presets, stock images, and file upload to storage.
-
-### 5. Script AI Assist
-**HeyGen has:** AI-powered script generation -- type a topic and get a generated script. Also supports SSML for pauses, emphasis.
-**Fix:** Add an "AI Generate" button next to the script textarea that calls Lovable AI (e.g., `google/gemini-2.5-flash`) to generate a script from a topic prompt.
-
-### 6. Video Translation / Dubbing
-**HeyGen has:** Translate existing videos into 40+ languages with lip-sync. This is a major feature.
-**Fix:** Add a "Translate Video" action on completed videos that calls HeyGen's video translation endpoint.
-
-### 7. Brand Kit / Brand Voices
-**HeyGen has:** Save brand colors, logos, fonts, and preferred voices as a "Brand Kit" for consistency.
-**Fix:** Add a Brand Kit section in Settings where users can save brand colors, logo URL, and default voice preferences.
-
-### 8. Projects / Folders
-**HeyGen has:** Organize videos into projects/folders with drag-and-drop.
-**Fix:** The `projects` table already exists in the schema. Wire it up with a project selector dropdown on the dashboard and My Videos page.
-
-### 9. Video Analytics
-**HeyGen has:** View count tracking, engagement analytics on shared videos.
-**Fix:** The `view_count` column exists on videos. Increment it on the share page and display analytics on each video card and in the detail modal.
-
-### 10. Batch Video Generation
-**HeyGen has:** CSV/spreadsheet upload to generate personalized videos at scale (e.g., personalized sales outreach).
-**Fix:** Add a "Batch Create" page with CSV upload, column mapping, and batch job tracking.
-
-### 11. Webhooks / Callback on Completion
-**HeyGen has:** Webhook notifications when video generation completes instead of polling.
-**Fix:** Add a webhook receiver edge function and update the video status flow to use push updates (with polling as fallback).
-
-### 12. Voice Cloning / Custom Voices
-**HeyGen has:** Clone your voice from an audio sample.
-**Fix:** Add voice upload in the Voices section that posts to HeyGen's voice clone API.
-
-### 13. Template Creation (User-Generated)
-**HeyGen has:** Users can save their own configurations as reusable templates.
-**Fix:** Add a "Save as Template" button on the Review step that inserts into the templates table with the user's avatar, voice, and script.
-
-### 14. Onboarding / First-Run Experience
-**HeyGen has:** Guided onboarding tour, sample video generation, getting-started checklist.
-**Fix:** Add a first-login checklist component on the dashboard (add API key, create first video, share a video) with completion tracking.
-
-### 15. Notification Center
-**HeyGen has:** In-app notifications for video completion, failures, quota warnings.
-**Fix:** Add a notifications dropdown in the sidebar header, backed by a `notifications` table with realtime subscription.
+**Recommendation**: **Fish Audio** for best price-to-quality ratio. **Cartesia** if speed matters most. **ElevenLabs** if you want the Lovable connector for easiest integration.
 
 ---
 
-## Recommended Sprint Priority (Top 10)
+## 2. Avatar Video Generation (Replacing HeyGen video create)
 
-| Sprint | Feature | Impact |
-|--------|---------|--------|
-| 1 | AI Script Generation | High -- core UX improvement, uses Lovable AI |
-| 2 | Background Selection | High -- visual quality of generated videos |
-| 3 | Save as Template (user-generated) | Medium -- reusability |
-| 4 | Projects/Folders organization | Medium -- uses existing `projects` table |
-| 5 | Avatar filtering (categories, gender, favorites) | Medium -- better browsing UX |
-| 6 | Video view count analytics | Low effort -- column exists |
-| 7 | Onboarding checklist | Medium -- first-run experience |
-| 8 | Multi-scene editor | High effort, high value |
-| 9 | Video translation/dubbing | High value, depends on HeyGen API tier |
-| 10 | Batch video generation | High value for power users |
+| Provider | Pricing | Speed | Quality | API |
+|----------|---------|-------|---------|-----|
+| **HeyGen** (current) | $0.01-0.033/sec (~$5.88/min PAYG) | 2-5 min | High | REST v2 |
+| **D-ID** | ~$0.08/sec ($4.80/min, Lite $4.70/mo = ~10 min) | 1-3 min | Good | REST, simple |
+| **Synthesia** | Enterprise only (~$22/video on Starter) | 3-10 min | High | REST, but expensive plans |
+| **Sync Labs + TTS** | $0.035/sec lip-sync + TTS cost | <1 min | Good-Great | REST + SDK |
+
+**Recommendation**: **Keep HeyGen** for full avatar videos (it's competitive at API level). Add **D-ID** as a cheaper alternative for photo-to-video (user uploads photo instead of picking studio avatar). This gives users a free/cheap path.
+
+---
+
+## 3. Lip Sync / Dubbing (New capability)
+
+| Provider | Pricing | Speed | Quality | Notes |
+|----------|---------|-------|---------|-------|
+| **Sync Labs** (Wav2Lip creators) | Free tier + $0.035/sec, plans from $5/mo | Fast (<1 min) | Good-Great | Best API, SDK available, 100+ languages |
+| **Replicate (SadTalker)** | ~$0.18/run | 30-60s | Decent | Open-source model, pay-per-use |
+| **Wav2Lip (self-hosted)** | Free (open-source) | Variable | Decent | Requires GPU infrastructure |
+
+**Recommendation**: **Sync Labs** -- commercial-grade API from Wav2Lip creators, free tier, REST API, best quality-to-price ratio for lip sync.
+
+---
+
+## Recommended Stack (Cheapest + Best Quality)
+
+```text
+Current:    HeyGen (everything)  ──> expensive, single point of failure
+
+Proposed:   ┌─────────────────────────────────────────────┐
+            │  TTS:        Fish Audio ($0.015/1K chars)   │
+            │  Avatars:    HeyGen (keep) + D-ID (photos)  │
+            │  Lip Sync:   Sync Labs ($0.035/sec, free tier)│
+            │  Scripts:    Lovable AI (already integrated) │
+            └─────────────────────────────────────────────┘
+```
+
+**Cost savings**: ~60-70% reduction on TTS vs ElevenLabs, free lip-sync tier, photo avatars at ~$4.70/mo vs HeyGen's per-minute pricing.
 
 ---
 
 ## Implementation Plan
 
-### Sprint 1: AI Script Generation
-- Add edge function `ai-generate-script` using Lovable AI gateway (`google/gemini-2.5-flash`)
-- Add "Generate with AI" button + topic input modal on the Script step of CreateVideo
-- Stream or return the generated script into the textarea
+### Phase 1: Fish Audio TTS Integration
+- Add `FISH_AUDIO_API_KEY` secret
+- Create `fish-audio-tts` edge function (`POST https://api.fish.audio/v1/tts`)
+- Create `fish-audio-voices` edge function to list voices
+- Add "Preview Script" audio button on the Script step in CreateVideo
+- Add Fish Audio API key field to Settings alongside HeyGen
 
-### Sprint 2: Background Selection
-- Add background picker UI to the creation wizard (after Avatar step or as sub-option)
-- Support: solid colors, preset images, and user-uploaded images via storage bucket
-- Pass `background` config to HeyGen API in edge function
+### Phase 2: Sync Labs Lip Sync
+- Add `SYNC_LABS_API_KEY` secret
+- Create `sync-lip-sync` edge function (`POST https://api.synclabs.so/lipsync`)
+- Create `sync-lip-sync-status` edge function for polling
+- Add "Translate / Dub" action on completed videos in MyVideos
+- Flow: user picks target language -> Lovable AI translates script -> Fish Audio generates audio -> Sync Labs lip-syncs original video
 
-### Sprint 3: Save as Template
-- Add "Save as Template" button on Step 3 (Review) of CreateVideo
-- Insert into `templates` table with `user_id`, `is_public = false`
-- Show "My Templates" tab on Templates page
+### Phase 3: D-ID Photo Avatars
+- Add `DID_API_KEY` secret
+- Create `did-create-video` edge function (`POST https://api.d-id.com/talks`)
+- Create `did-video-status` edge function
+- Add "Upload Photo" tab on Avatars page -- uses D-ID instead of HeyGen
+- Users who don't have a HeyGen key can still create videos from photos
 
-### Sprint 4: Projects/Folders
-- Create project CRUD UI (create, rename, delete projects)
-- Add project selector/filter on My Videos page
-- Add `project_id` foreign key to videos table (migration)
+### Phase 4: Provider Abstraction
+- Database migration: add `provider` enum column to `videos` table (default `heygen`)
+- Add `audio_url`, `source_video_id` columns to `videos`
+- Update Settings page with tabbed API key management (HeyGen, Fish Audio, Sync Labs, D-ID)
+- Add provider selector in CreateVideo wizard
+- Unified status polling across providers
 
-### Sprint 5: Avatar Filtering
-- Add category tabs and gender filter to Avatars page
-- Add favorites table or column, persist per user
-- Show "Favorites" tab
-
-### Sprint 6: Video Analytics
-- Increment `view_count` on share page load (edge function or RPC)
-- Show view count badge on video cards
-- Add simple analytics section in video detail modal
-
-### Sprint 7: Onboarding Checklist
-- Track onboarding state in profiles (JSON column or separate table)
-- Show checklist widget on dashboard for new users
-- Auto-dismiss after all steps complete
-
-### Sprint 8-10: Multi-scene, Translation, Batch
-- These are larger features requiring significant UI and API work
-- Multi-scene needs a drag-and-drop scene timeline component
-- Translation needs HeyGen Enterprise API access
-- Batch needs CSV parser + job queue UI
-
-### Database Changes Required
-- Migration: Add `project_id` (nullable FK) to `videos` table
-- Migration: Create `favorites` table (`user_id`, `avatar_id`, unique constraint)
-- Migration: Create `notifications` table with realtime enabled
-- Migration: Add `onboarding_completed` boolean to `profiles`
+### Database Changes
+- Migration: `ALTER TABLE videos ADD COLUMN provider text DEFAULT 'heygen'`
+- Migration: `ALTER TABLE videos ADD COLUMN audio_url text`
+- Migration: `ALTER TABLE videos ADD COLUMN source_video_id uuid REFERENCES videos(id)`
+- Migration: `ALTER TABLE profiles ADD COLUMN fish_audio_api_key text`
+- Migration: `ALTER TABLE profiles ADD COLUMN did_api_key text`
+- Migration: `ALTER TABLE profiles ADD COLUMN sync_labs_api_key text`
 
 ### New Edge Functions
-- `ai-generate-script` -- calls Lovable AI to generate video scripts
-- `increment-view-count` -- RPC to safely increment share view counts
+| Function | Provider | Purpose |
+|----------|----------|---------|
+| `fish-audio-tts` | Fish Audio | Text-to-speech audio generation |
+| `fish-audio-voices` | Fish Audio | List available TTS voices |
+| `sync-lip-sync` | Sync Labs | Lip-sync video to audio |
+| `sync-lip-sync-status` | Sync Labs | Poll lip-sync completion |
+| `did-create-video` | D-ID | Photo-to-talking-video |
+| `did-video-status` | D-ID | Poll D-ID video completion |
+
+### UI Changes
+- Settings: tabbed API key sections for each provider with connection status indicators
+- CreateVideo: provider selector (HeyGen / D-ID / Photo), audio preview button
+- MyVideos: "Translate/Dub" action menu item on completed videos
+- Avatars: "Upload Photo" tab for D-ID photo avatars
 
