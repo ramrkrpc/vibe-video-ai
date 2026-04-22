@@ -71,15 +71,10 @@ export function useShareVideo() {
 
   return useMutation({
     mutationFn: async ({ videoId, shared }: { videoId: string; shared: boolean }) => {
-      const updates: Record<string, unknown> = { shared };
-      if (shared) {
-        updates.share_token = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
-      } else {
-        updates.share_token = null;
-      }
+      const shareToken = shared ? crypto.randomUUID().replace(/-/g, "").slice(0, 16) : null;
       const { data, error } = await supabase
         .from("videos")
-        .update(updates)
+        .update({ shared, share_token: shareToken })
         .eq("id", videoId)
         .eq("user_id", user!.id)
         .select()

@@ -24,8 +24,7 @@ const ShareVideo = () => {
         setError("Video not found or sharing is disabled");
       } else {
         setVideo(data);
-        // Increment view count
-        await supabase.rpc("increment_view_count" as any, { video_id: data.id }).catch(() => {});
+        // View count increment would need an RPC function - skip for now
       }
       setLoading(false);
     };
