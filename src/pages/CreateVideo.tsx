@@ -375,7 +375,10 @@ const CreateVideo = () => {
           <div className="space-y-4">
             <Card className="glass">
               <CardContent className="pt-6">
-                <div className="aspect-video rounded-lg bg-secondary flex items-center justify-center overflow-hidden">
+                <div
+                  className="aspect-video rounded-lg bg-secondary flex items-center justify-center overflow-hidden"
+                  style={background.type === "color" ? { backgroundColor: background.value } : background.type === "image" ? { backgroundImage: `url(${background.value})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}
+                >
                   {selectedAvatarImg ? (
                     <img src={selectedAvatarImg} alt={selectedAvatarName} className="h-full object-cover" />
                   ) : (
