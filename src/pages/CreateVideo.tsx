@@ -92,6 +92,24 @@ const CreateVideo = () => {
     }
   };
 
+  if (apiKeyMissing) {
+    return (
+      <div className="max-w-5xl">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Create Video</h1>
+          <p className="text-muted-foreground mt-1">Generate an AI video with a talking avatar</p>
+        </div>
+        <EmptyState
+          icon={AlertCircle}
+          title="HeyGen API Key Required"
+          description="Add your HeyGen API key in Settings to start creating videos."
+          actionLabel="Go to Settings"
+          onAction={() => navigate("/settings")}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl space-y-6">
       <div>
