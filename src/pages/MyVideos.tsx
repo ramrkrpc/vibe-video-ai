@@ -153,6 +153,10 @@ const MyVideos = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={(e) => handleShare(video, e as any)}>
+                          {copiedId === video.id ? <Check className="w-4 h-4 mr-2" /> : <Share2 className="w-4 h-4 mr-2" />}
+                          {copiedId === video.id ? "Copied!" : "Share"}
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={(e) => handleDownload(video, e as any)}>
                           <Download className="w-4 h-4 mr-2" /> Download
                         </DropdownMenuItem>
@@ -197,6 +201,10 @@ const MyVideos = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={(e) => handleShare(video, e as any)}>
+                      {copiedId === video.id ? <Check className="w-4 h-4 mr-2" /> : <Share2 className="w-4 h-4 mr-2" />}
+                      {copiedId === video.id ? "Copied!" : "Share"}
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={(e) => handleDownload(video, e as any)}>
                       <Download className="w-4 h-4 mr-2" /> Download
                     </DropdownMenuItem>
@@ -245,6 +253,11 @@ const MyVideos = () => {
               {formatDuration(selectedVideo?.duration_seconds ?? null)} · {selectedVideo && formatDistanceToNow(new Date(selectedVideo.created_at), { addSuffix: true })}
             </div>
             <div className="flex gap-2">
+              {selectedVideo?.status === "completed" && (
+                <Button variant="outline" size="sm" onClick={() => selectedVideo && handleShare(selectedVideo)}>
+                  <Share2 className="w-4 h-4 mr-2" /> Share
+                </Button>
+              )}
               {selectedVideo?.video_url && (
                 <Button variant="outline" size="sm" onClick={() => handleDownload(selectedVideo)}>
                   <Download className="w-4 h-4 mr-2" /> Download
