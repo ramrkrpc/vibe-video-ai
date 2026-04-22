@@ -18,25 +18,34 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          did_api_key: string | null
+          fish_audio_api_key: string | null
           full_name: string | null
           heygen_api_key: string | null
           id: string
+          sync_labs_api_key: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          did_api_key?: string | null
+          fish_audio_api_key?: string | null
           full_name?: string | null
           heygen_api_key?: string | null
           id: string
+          sync_labs_api_key?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          did_api_key?: string | null
+          fish_audio_api_key?: string | null
           full_name?: string | null
           heygen_api_key?: string | null
           id?: string
+          sync_labs_api_key?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -113,6 +122,7 @@ export type Database = {
       videos: {
         Row: {
           aspect_ratio: string | null
+          audio_url: string | null
           avatar_id: string | null
           created_at: string
           duration_seconds: number | null
@@ -120,10 +130,12 @@ export type Database = {
           heygen_video_id: string | null
           id: string
           project_id: string | null
+          provider: string | null
           resolution: string | null
           script: string | null
           share_token: string | null
           shared: boolean
+          source_video_id: string | null
           status: Database["public"]["Enums"]["video_status"]
           thumbnail_url: string | null
           title: string
@@ -135,6 +147,7 @@ export type Database = {
         }
         Insert: {
           aspect_ratio?: string | null
+          audio_url?: string | null
           avatar_id?: string | null
           created_at?: string
           duration_seconds?: number | null
@@ -142,10 +155,12 @@ export type Database = {
           heygen_video_id?: string | null
           id?: string
           project_id?: string | null
+          provider?: string | null
           resolution?: string | null
           script?: string | null
           share_token?: string | null
           shared?: boolean
+          source_video_id?: string | null
           status?: Database["public"]["Enums"]["video_status"]
           thumbnail_url?: string | null
           title: string
@@ -157,6 +172,7 @@ export type Database = {
         }
         Update: {
           aspect_ratio?: string | null
+          audio_url?: string | null
           avatar_id?: string | null
           created_at?: string
           duration_seconds?: number | null
@@ -164,10 +180,12 @@ export type Database = {
           heygen_video_id?: string | null
           id?: string
           project_id?: string | null
+          provider?: string | null
           resolution?: string | null
           script?: string | null
           share_token?: string | null
           shared?: boolean
+          source_video_id?: string | null
           status?: Database["public"]["Enums"]["video_status"]
           thumbnail_url?: string | null
           title?: string
@@ -183,6 +201,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "videos_source_video_id_fkey"
+            columns: ["source_video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
             referencedColumns: ["id"]
           },
         ]
