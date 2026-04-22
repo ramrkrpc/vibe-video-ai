@@ -95,10 +95,6 @@ export function useVideoStatusPoll(heygenVideoId: string | null, enabled: boolea
     queryKey: ["video-status", heygenVideoId],
     queryFn: async () => {
       if (!heygenVideoId) return null;
-      const { data, error } = await supabase.functions.invoke("heygen-video-status", {
-        method: "GET",
-      });
-      // The edge function expects query params, so we need to use fetch directly
       const session = await supabase.auth.getSession();
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const url = `https://${projectId}.supabase.co/functions/v1/heygen-video-status?video_id=${encodeURIComponent(heygenVideoId)}`;
