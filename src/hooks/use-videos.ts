@@ -51,6 +51,7 @@ export function useCreateVideo() {
       voice_id: string;
       resolution?: string;
       aspect_ratio?: string;
+      background?: { type: string; value: string };
     }) => {
       const { data, error } = await supabase.functions.invoke("heygen-create-video", {
         body: params,
