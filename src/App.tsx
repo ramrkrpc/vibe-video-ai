@@ -13,6 +13,7 @@ import Templates from "./pages/Templates";
 import MyVideos from "./pages/MyVideos";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
+import ShareVideo from "./pages/ShareVideo";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/share/:token" element={<ShareVideo />} />
             <Route element={<ProtectedLayout />}>
               <Route path="/" element={<Index />} />
               <Route path="/avatars" element={<Avatars />} />

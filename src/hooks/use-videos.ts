@@ -65,26 +65,49 @@ export function useCreateVideo() {
   });
 }
 
+export function useShareVideo() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ videoId, shared }: { videoId: string; shared: boolean }) => {
+      const shareToken = shared ? crypto.randomUUID().replace(/-/g, "").slice(0, 16) : null;
+      const { data, error } = await supabase
+        .from("videos")
+        .update({ shared, share_token: shareToken })
+        .eq("id", videoId)
+        .eq("user_id", user!.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["videos"] });
+    },
+  });
+}
+
 export function useVideoStatusPoll(heygenVideoId: string | null, enabled: boolean) {
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: ["video-status", heygenVideoId],
     queryFn: async () => {
       if (!heygenVideoId) return null;
-      const { data, error } = await supabase.functions.invoke("heygen-video-status", {
-        body: {},
-        headers: {},
-      });
-      // Use query params approach
-      const url = new URL(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/heygen-video-status`);
-      url.searchParams.set("video_id", heygenVideoId);
       const session = await supabase.auth.getSession();
-      const res = await fetch(url.toString(), {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const url = `https://${projectId}.supabase.co/functions/v1/heygen-video-status?video_id=${encodeURIComponent(heygenVideoId)}`;
+      const res = await fetch(url, {
         headers: {
           Authorization: `Bearer ${session.data.session?.access_token}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
       });
       const result = await res.json();
+      if (result?.data?.status === "completed" || result?.data?.status === "failed") {
+        queryClient.invalidateQueries({ queryKey: ["videos"] });
+      }
       return result;
     },
     enabled: !!heygenVideoId && enabled,
