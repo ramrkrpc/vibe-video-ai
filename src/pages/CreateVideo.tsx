@@ -15,6 +15,7 @@ import { useVoices, type HeyGenVoice } from "@/hooks/use-voices";
 import { useAvatars, type HeyGenAvatar } from "@/hooks/use-avatars";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { BackgroundPicker, type BackgroundConfig } from "@/components/BackgroundPicker";
 import { AIScriptGenerator } from "@/components/AIScriptGenerator";
 import { SaveAsTemplate } from "@/components/SaveAsTemplate";
 
