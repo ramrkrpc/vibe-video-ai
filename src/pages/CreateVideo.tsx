@@ -335,8 +335,9 @@ const CreateVideo = () => {
       {step === 3 && (
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card className="glass">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Review</CardTitle>
+              <SaveAsTemplate title={title} script={script} avatarId={selectedAvatarId} voiceId={voice} />
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3 text-sm">
