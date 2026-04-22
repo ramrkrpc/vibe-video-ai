@@ -119,12 +119,15 @@ export type Database = {
           project_id: string | null
           resolution: string | null
           script: string | null
+          share_token: string | null
+          shared: boolean
           status: Database["public"]["Enums"]["video_status"]
           thumbnail_url: string | null
           title: string
           updated_at: string
           user_id: string
           video_url: string | null
+          view_count: number
           voice_id: string | null
         }
         Insert: {
@@ -138,12 +141,15 @@ export type Database = {
           project_id?: string | null
           resolution?: string | null
           script?: string | null
+          share_token?: string | null
+          shared?: boolean
           status?: Database["public"]["Enums"]["video_status"]
           thumbnail_url?: string | null
           title: string
           updated_at?: string
           user_id: string
           video_url?: string | null
+          view_count?: number
           voice_id?: string | null
         }
         Update: {
@@ -157,12 +163,15 @@ export type Database = {
           project_id?: string | null
           resolution?: string | null
           script?: string | null
+          share_token?: string | null
+          shared?: boolean
           status?: Database["public"]["Enums"]["video_status"]
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
           user_id?: string
           video_url?: string | null
+          view_count?: number
           voice_id?: string | null
         }
         Relationships: [
