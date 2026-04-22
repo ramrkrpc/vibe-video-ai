@@ -1,186 +1,156 @@
 
 
-# HeyGen Clone -- Gap Analysis and Enhancement Sprint Plan
+# Gap Analysis: Your App vs app.heygen.ai
 
-## Current State Assessment
-
-The app has a solid foundation: auth flow, sidebar navigation, dark theme, edge functions for HeyGen API, and basic CRUD database schema. However, comparing against app.heygen.ai, there are significant UI and logic gaps.
-
----
-
-## Gap Analysis
-
-### Critical Logic Gaps
-1. **All data is hardcoded/mock** -- Dashboard stats, recent videos, avatar gallery, and My Videos all use static arrays instead of querying the database or HeyGen API
-2. **Settings page doesn't save** -- API key input has no state binding and the "save" is a no-op toast
-3. **CreateVideo doesn't call the edge function** -- generates a fake setTimeout instead of invoking `heygen-create-video`
-4. **Avatars page doesn't fetch from HeyGen API** -- shows 12 hardcoded names with no images
-5. **Templates don't load from database** -- hardcoded array, no DB query
-6. **No video polling** -- after generation starts, there's no mechanism to poll `heygen-video-status` until completion
-7. **No password reset flow** -- "Change Password" button is a no-op, no `/reset-password` route
-8. **Profile save doesn't persist** -- Settings name change is local state only
-
-### UI/UX Gaps vs app.heygen.ai
-1. **No onboarding/empty states** -- empty pages show nothing helpful
-2. **No avatar preview images** -- just generic User icons everywhere
-3. **No voice preview/audio samples** -- voice selection is a blind dropdown
-4. **No video thumbnail generation** -- video cards show Play icon placeholders
-5. **No real video player** -- modal shows a placeholder, not an actual `<video>` element
-6. **No loading/skeleton states** -- pages snap in without content shimmer
-7. **No error boundaries** -- API failures show nothing
-8. **Sidebar lacks branding depth** -- no avatar/user photo, no plan badge
-9. **No search across the app** -- global command palette missing
-10. **No notification/activity feed**
-11. **No drag-and-drop or multi-step video creation wizard**
-12. **Header is nearly empty** -- just a sidebar trigger, no breadcrumbs, search, or user menu
-13. **No "Forgot password" link** on auth page
+## What You Have (Working)
+- Auth (email + Google OAuth + forgot password)
+- Dashboard with stats, recent videos, API key warning
+- 4-step video creation wizard (Avatar > Script > Voice > Review)
+- Avatar browsing with search and detail modal
+- Voice selection with preview playback
+- Video management (grid/list view, search, delete, share, download)
+- Video playback modal with status handling
+- Templates page (8 fallback templates)
+- Settings (profile, API key, password reset)
+- Edge functions for HeyGen API (avatars, voices, create, status poll)
+- Share via token with public route
+- Command palette (Cmd+K)
+- Dark theme with glass morphism design
+- Skeleton loading states throughout
 
 ---
 
-## Sprint Plan (20 Sprints)
+## Gaps Compared to app.heygen.ai
 
-### Sprint 1: Wire Dashboard to Real Data
-- Query `videos` table for recent videos and counts
-- Query `profiles` for user info
-- Replace all hardcoded stats with live data using React Query
-- Show empty states when no data exists
+### 1. Interactive Avatar / Photo Avatar Upload
+**HeyGen has:** Upload a photo to create a custom avatar, or use Interactive Avatars (real-time streaming). Your app only lists pre-built avatars from the API.
+**Fix:** Add a "Create Avatar" flow with photo upload via HeyGen's `/v2/photo_avatar` endpoint, and a section for "My Avatars" vs "Public Avatars" tabs.
 
-### Sprint 2: Settings -- Persist Profile and API Key
-- Bind API key input to state, save to `profiles.heygen_api_key` via Supabase
-- Persist full name updates to `profiles.full_name`
-- Add success/error feedback with actual DB calls
-- Add "Forgot Password" with `resetPasswordForEmail` and create `/reset-password` route
+### 2. Avatar Grouping and Filtering
+**HeyGen has:** Avatars organized by categories (Studio, Instant, Photo), gender filters, and "Favorites" bookmarks.
+**Fix:** Add category tabs (All / Studio / Instant / Photo), gender filter chips, and a favorites toggle that persists to the database.
 
-### Sprint 3: Avatars -- Fetch from HeyGen API
-- Call `heygen-list-avatars` edge function from Avatars page via React Query
-- Display real avatar names and preview images from the API response
-- Keep mock fallback if no API key is set yet
-- Add skeleton loading cards during fetch
+### 3. Video Editor / Scene Builder
+**HeyGen has:** A multi-scene video editor where you can add multiple scenes, each with different avatars, backgrounds, text overlays, and transitions. Your app only supports a single-scene, single-script flow.
+**Fix:** Build a scene-based editor component where users can add/remove/reorder scenes, each with its own avatar, script segment, and optional background image.
 
-### Sprint 4: CreateVideo -- Wire to Edge Function
-- Call `heygen-create-video` edge function on Generate button
-- Pass selected avatar, voice, script, resolution, aspect ratio
-- Save returned video record and redirect to My Videos
-- Show proper error messages from API failures
+### 4. Background Selection
+**HeyGen has:** Choose or upload custom backgrounds for each scene (solid colors, stock images, uploaded images).
+**Fix:** Add a background picker step in the creation wizard with color presets, stock images, and file upload to storage.
 
-### Sprint 5: Video Status Polling
-- After video creation, start polling `heygen-video-status` every 10s
-- Update video status in the UI in real-time
-- Stop polling when status reaches `completed` or `failed`
-- Show progress indicator during processing
+### 5. Script AI Assist
+**HeyGen has:** AI-powered script generation -- type a topic and get a generated script. Also supports SSML for pauses, emphasis.
+**Fix:** Add an "AI Generate" button next to the script textarea that calls Lovable AI (e.g., `google/gemini-2.5-flash`) to generate a script from a topic prompt.
 
-### Sprint 6: My Videos -- Real Data and Video Player
-- Query `videos` table with React Query, replace mock data
-- Implement actual `<video>` playback in the modal using `video_url`
-- Wire Download button to actual video URL
-- Wire Delete button to delete from DB
-- Add empty state for new users
+### 6. Video Translation / Dubbing
+**HeyGen has:** Translate existing videos into 40+ languages with lip-sync. This is a major feature.
+**Fix:** Add a "Translate Video" action on completed videos that calls HeyGen's video translation endpoint.
 
-### Sprint 7: Templates -- Load from Database
-- Query `templates` table for public templates
-- Seed initial template data via migration
-- Wire "Use Template" to pre-fill CreateVideo with template's script, avatar, voice
-- Parse query params in CreateVideo to load template data
+### 7. Brand Kit / Brand Voices
+**HeyGen has:** Save brand colors, logos, fonts, and preferred voices as a "Brand Kit" for consistency.
+**Fix:** Add a Brand Kit section in Settings where users can save brand colors, logo URL, and default voice preferences.
 
-### Sprint 8: Enhanced Header and Global Navigation
-- Add breadcrumbs showing current page
-- Add user avatar dropdown (profile pic, name, sign out)
-- Add global search input in header (Cmd+K command palette)
-- Add notification bell icon (placeholder for future)
+### 8. Projects / Folders
+**HeyGen has:** Organize videos into projects/folders with drag-and-drop.
+**Fix:** The `projects` table already exists in the schema. Wire it up with a project selector dropdown on the dashboard and My Videos page.
 
-### Sprint 9: Skeleton Loading States
-- Add shimmer/skeleton components for all data-loading pages
-- Dashboard stat cards skeleton
-- Avatar grid skeleton
-- Video grid skeleton
-- Templates grid skeleton
+### 9. Video Analytics
+**HeyGen has:** View count tracking, engagement analytics on shared videos.
+**Fix:** The `view_count` column exists on videos. Increment it on the share page and display analytics on each video card and in the detail modal.
 
-### Sprint 10: Empty States and Onboarding
-- Design illustrated empty states for each page (no videos yet, no avatars, etc.)
-- Add first-time user onboarding banner: "Set up your API key to get started"
-- Add guided steps: 1) Add API key 2) Browse avatars 3) Create first video
-- Dismiss onboarding after first video is created
+### 10. Batch Video Generation
+**HeyGen has:** CSV/spreadsheet upload to generate personalized videos at scale (e.g., personalized sales outreach).
+**Fix:** Add a "Batch Create" page with CSV upload, column mapping, and batch job tracking.
 
-### Sprint 11: Avatar Detail Modal and Selection Flow
-- Click avatar opens a detail modal with larger preview, name, description
-- "Select and Create Video" button navigates to CreateVideo with avatar pre-selected
-- Show avatar preview in CreateVideo sidebar when selected
-- Persist last-used avatar preference
+### 11. Webhooks / Callback on Completion
+**HeyGen has:** Webhook notifications when video generation completes instead of polling.
+**Fix:** Add a webhook receiver edge function and update the video status flow to use push updates (with polling as fallback).
 
-### Sprint 12: Voice Selection Enhancement
-- Fetch available voices from HeyGen API (new edge function `heygen-list-voices`)
-- Show voice language, gender, accent tags
-- Add audio preview button to hear voice samples
-- Group voices by language with collapsible sections
+### 12. Voice Cloning / Custom Voices
+**HeyGen has:** Clone your voice from an audio sample.
+**Fix:** Add voice upload in the Voices section that posts to HeyGen's voice clone API.
 
-### Sprint 13: Video Creation Wizard (Multi-Step)
-- Refactor CreateVideo into a step-by-step wizard:
-  - Step 1: Choose Avatar
-  - Step 2: Write Script
-  - Step 3: Select Voice and Settings
-  - Step 4: Review and Generate
-- Add progress stepper UI at top
-- Allow navigation back and forth between steps
+### 13. Template Creation (User-Generated)
+**HeyGen has:** Users can save their own configurations as reusable templates.
+**Fix:** Add a "Save as Template" button on the Review step that inserts into the templates table with the user's avatar, voice, and script.
 
-### Sprint 14: Project Management
-- Allow users to create named projects to organize videos
-- Add project selector dropdown in the sidebar or header
-- Videos belong to projects
-- Project list page with video counts and last-updated dates
+### 14. Onboarding / First-Run Experience
+**HeyGen has:** Guided onboarding tour, sample video generation, getting-started checklist.
+**Fix:** Add a first-login checklist component on the dashboard (add API key, create first video, share a video) with completion tracking.
 
-### Sprint 15: Video Share and Embed
-- Generate shareable link for completed videos
-- Add copy-to-clipboard for share URL
-- Create a public `/share/:id` route that plays video without auth
-- Add embed code generation (iframe snippet)
-
-### Sprint 16: Responsive and Mobile Polish
-- Audit all pages for mobile breakpoints
-- Sidebar collapses to bottom navigation on mobile
-- Video grid switches to single column
-- Touch-friendly controls on video player
-- Ensure auth page works well on small screens
-
-### Sprint 17: Dark/Light Theme Toggle
-- Add theme toggle in header and settings
-- Define light theme CSS variables
-- Persist theme preference to localStorage
-- Ensure all glass/gradient utilities work in both themes
-
-### Sprint 18: Analytics Dashboard
-- Show video view counts (tracked via share page)
-- Chart: videos created over time (last 30 days)
-- Chart: API credit usage trend
-- Use recharts or chart.js for visualizations
-
-### Sprint 19: Batch Video Generation
-- Allow CSV/text upload with multiple scripts
-- Generate videos in batch with queue tracking
-- Batch status page showing each video's progress
-- Download all completed videos as zip
-
-### Sprint 20: Performance, Polish, and Error Handling
-- Add React Error Boundaries around each page
-- Add toast notifications for all API errors with retry actions
-- Lazy-load routes with React.lazy and Suspense
-- Optimize avatar image loading with lazy loading and blur-up
-- Final visual audit: spacing, typography, animation consistency
-- Add keyboard shortcuts (Ctrl+N for new video, Ctrl+K for search)
+### 15. Notification Center
+**HeyGen has:** In-app notifications for video completion, failures, quota warnings.
+**Fix:** Add a notifications dropdown in the sidebar header, backed by a `notifications` table with realtime subscription.
 
 ---
 
-## Technical Details
+## Recommended Sprint Priority (Top 10)
 
-### New Database Migrations Needed
-- Seed `templates` table with 8-10 starter templates (Sprint 7)
-- Add `shared` boolean and `share_token` columns to `videos` table (Sprint 15)
-- Add `view_count` column to `videos` (Sprint 18)
+| Sprint | Feature | Impact |
+|--------|---------|--------|
+| 1 | AI Script Generation | High -- core UX improvement, uses Lovable AI |
+| 2 | Background Selection | High -- visual quality of generated videos |
+| 3 | Save as Template (user-generated) | Medium -- reusability |
+| 4 | Projects/Folders organization | Medium -- uses existing `projects` table |
+| 5 | Avatar filtering (categories, gender, favorites) | Medium -- better browsing UX |
+| 6 | Video view count analytics | Low effort -- column exists |
+| 7 | Onboarding checklist | Medium -- first-run experience |
+| 8 | Multi-scene editor | High effort, high value |
+| 9 | Video translation/dubbing | High value, depends on HeyGen API tier |
+| 10 | Batch video generation | High value for power users |
+
+---
+
+## Implementation Plan
+
+### Sprint 1: AI Script Generation
+- Add edge function `ai-generate-script` using Lovable AI gateway (`google/gemini-2.5-flash`)
+- Add "Generate with AI" button + topic input modal on the Script step of CreateVideo
+- Stream or return the generated script into the textarea
+
+### Sprint 2: Background Selection
+- Add background picker UI to the creation wizard (after Avatar step or as sub-option)
+- Support: solid colors, preset images, and user-uploaded images via storage bucket
+- Pass `background` config to HeyGen API in edge function
+
+### Sprint 3: Save as Template
+- Add "Save as Template" button on Step 3 (Review) of CreateVideo
+- Insert into `templates` table with `user_id`, `is_public = false`
+- Show "My Templates" tab on Templates page
+
+### Sprint 4: Projects/Folders
+- Create project CRUD UI (create, rename, delete projects)
+- Add project selector/filter on My Videos page
+- Add `project_id` foreign key to videos table (migration)
+
+### Sprint 5: Avatar Filtering
+- Add category tabs and gender filter to Avatars page
+- Add favorites table or column, persist per user
+- Show "Favorites" tab
+
+### Sprint 6: Video Analytics
+- Increment `view_count` on share page load (edge function or RPC)
+- Show view count badge on video cards
+- Add simple analytics section in video detail modal
+
+### Sprint 7: Onboarding Checklist
+- Track onboarding state in profiles (JSON column or separate table)
+- Show checklist widget on dashboard for new users
+- Auto-dismiss after all steps complete
+
+### Sprint 8-10: Multi-scene, Translation, Batch
+- These are larger features requiring significant UI and API work
+- Multi-scene needs a drag-and-drop scene timeline component
+- Translation needs HeyGen Enterprise API access
+- Batch needs CSV parser + job queue UI
+
+### Database Changes Required
+- Migration: Add `project_id` (nullable FK) to `videos` table
+- Migration: Create `favorites` table (`user_id`, `avatar_id`, unique constraint)
+- Migration: Create `notifications` table with realtime enabled
+- Migration: Add `onboarding_completed` boolean to `profiles`
 
 ### New Edge Functions
-- `heygen-list-voices` -- fetch available voices from HeyGen API (Sprint 12)
-
-### Key Patterns
-- All data fetching will use `@tanstack/react-query` with proper cache keys, stale times, and error/loading states
-- Edge functions invoked via `supabase.functions.invoke()`, never by path
-- All new pages follow the existing glass card + motion animation design language
+- `ai-generate-script` -- calls Lovable AI to generate video scripts
+- `increment-view-count` -- RPC to safely increment share view counts
 
