@@ -26,7 +26,7 @@ export function useUpdateProfile() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (updates: { full_name?: string; heygen_api_key?: string; avatar_url?: string }) => {
+    mutationFn: async (updates: { full_name?: string; heygen_api_key?: string; avatar_url?: string; fish_audio_api_key?: string; did_api_key?: string; sync_labs_api_key?: string }) => {
       if (!user) throw new Error("Not authenticated");
       const { data, error } = await supabase
         .from("profiles")

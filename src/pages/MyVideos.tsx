@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Play, Download, Trash2, Share2, MoreVertical, Search, Grid, List, Video, ExternalLink, Copy, Check } from "lucide-react";
+import { Play, Download, Trash2, Share2, MoreVertical, Search, Grid, List, Video, Check, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -46,6 +47,14 @@ const MyVideos = () => {
       case "processing": return "bg-warning/10 text-warning";
       case "failed": return "bg-destructive/10 text-destructive";
       default: return "bg-muted text-muted-foreground";
+    }
+  };
+
+  const providerLabel = (provider: string | null) => {
+    switch (provider) {
+      case "did": return "D-ID";
+      case "synclabs": return "Sync Labs";
+      default: return "HeyGen";
     }
   };
 
@@ -87,6 +96,39 @@ const MyVideos = () => {
       toast.error(err.message || "Failed to share video");
     }
   };
+
+  const handleTranslateDub = (video: VideoRow, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!video.video_url) {
+      toast.error("Video must be completed first");
+      return;
+    }
+    toast.info("Translate/Dub feature requires Sync Labs API key. Configure it in Settings.");
+  };
+
+  const renderDropdownItems = (video: VideoRow) => (
+    <>
+      <DropdownMenuItem onClick={(e) => handleShare(video, e as any)}>
+        {copiedId === video.id ? <Check className="w-4 h-4 mr-2" /> : <Share2 className="w-4 h-4 mr-2" />}
+        {copiedId === video.id ? "Copied!" : "Share"}
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={(e) => handleDownload(video, e as any)}>
+        <Download className="w-4 h-4 mr-2" /> Download
+      </DropdownMenuItem>
+      {video.status === "completed" && (
+        <>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={(e) => handleTranslateDub(video, e as any)}>
+            <Languages className="w-4 h-4 mr-2" /> Translate / Dub
+          </DropdownMenuItem>
+        </>
+      )}
+      <DropdownMenuSeparator />
+      <DropdownMenuItem className="text-destructive" onClick={(e) => handleDelete(video.id, e as any)}>
+        <Trash2 className="w-4 h-4 mr-2" /> Delete
+      </DropdownMenuItem>
+    </>
+  );
 
   return (
     <div className="space-y-6 max-w-7xl">
@@ -153,21 +195,15 @@ const MyVideos = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={(e) => handleShare(video, e as any)}>
-                          {copiedId === video.id ? <Check className="w-4 h-4 mr-2" /> : <Share2 className="w-4 h-4 mr-2" />}
-                          {copiedId === video.id ? "Copied!" : "Share"}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => handleDownload(video, e as any)}>
-                          <Download className="w-4 h-4 mr-2" /> Download
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={(e) => handleDelete(video.id, e as any)}>
-                          <Trash2 className="w-4 h-4 mr-2" /> Delete
-                        </DropdownMenuItem>
+                        {renderDropdownItems(video)}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
                   <div className="flex items-center gap-2 mt-2">
                     <Badge className={`${statusColor(video.status)} text-xs border-0`}>{video.status}</Badge>
+                    {(video as any).provider && (video as any).provider !== "heygen" && (
+                      <Badge variant="outline" className="text-xs">{providerLabel((video as any).provider)}</Badge>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -194,6 +230,9 @@ const MyVideos = () => {
               <div className="flex items-center gap-4">
                 <span className="text-sm text-muted-foreground">{formatDuration(video.duration_seconds)}</span>
                 <Badge className={`${statusColor(video.status)} text-xs border-0`}>{video.status}</Badge>
+                {(video as any).provider && (video as any).provider !== "heygen" && (
+                  <Badge variant="outline" className="text-xs">{providerLabel((video as any).provider)}</Badge>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
@@ -201,16 +240,7 @@ const MyVideos = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={(e) => handleShare(video, e as any)}>
-                      {copiedId === video.id ? <Check className="w-4 h-4 mr-2" /> : <Share2 className="w-4 h-4 mr-2" />}
-                      {copiedId === video.id ? "Copied!" : "Share"}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => handleDownload(video, e as any)}>
-                      <Download className="w-4 h-4 mr-2" /> Download
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive" onClick={(e) => handleDelete(video.id, e as any)}>
-                      <Trash2 className="w-4 h-4 mr-2" /> Delete
-                    </DropdownMenuItem>
+                    {renderDropdownItems(video)}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -254,9 +284,14 @@ const MyVideos = () => {
             </div>
             <div className="flex gap-2">
               {selectedVideo?.status === "completed" && (
-                <Button variant="outline" size="sm" onClick={() => selectedVideo && handleShare(selectedVideo)}>
-                  <Share2 className="w-4 h-4 mr-2" /> Share
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" onClick={() => selectedVideo && handleShare(selectedVideo)}>
+                    <Share2 className="w-4 h-4 mr-2" /> Share
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => selectedVideo && handleTranslateDub(selectedVideo)}>
+                    <Languages className="w-4 h-4 mr-2" /> Dub
+                  </Button>
+                </>
               )}
               {selectedVideo?.video_url && (
                 <Button variant="outline" size="sm" onClick={() => handleDownload(selectedVideo)}>
