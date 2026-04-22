@@ -37,6 +37,7 @@ const CreateVideo = () => {
   const [ratio, setRatio] = useState("16:9");
   const [avatarSearch, setAvatarSearch] = useState("");
   const [voiceSearch, setVoiceSearch] = useState("");
+  const [background, setBackground] = useState<BackgroundConfig>({ type: "none", value: "" });
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { data: avatars, isLoading: avatarsLoading, error: avatarsError } = useAvatars();
@@ -71,6 +72,7 @@ const CreateVideo = () => {
         voice_id: voice,
         resolution,
         aspect_ratio: ratio,
+        background: background.type !== "none" ? background : undefined,
       });
       toast.success("Video generation started! Check My Videos for progress.");
       navigate("/videos");
