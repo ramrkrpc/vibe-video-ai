@@ -14,21 +14,44 @@ interface UseAvatarsOptions {
   enabled?: boolean;
 }
 
+interface HeyGenAvatarsQueryResult {
+  avatars: HeyGenAvatar[];
+  configured: boolean;
+  message?: string;
+}
+
 export function useAvatars({ enabled = true }: UseAvatarsOptions = {}) {
-  return useQuery({
+  const query = useQuery<HeyGenAvatarsQueryResult>({
     queryKey: ["avatars"],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("heygen-list-avatars");
       if (error) {
         const msg = await getFunctionErrorMessage(error, "Failed to load avatars");
-        throw new Error(msg.includes("No HeyGen API key") ? "No HeyGen API key configured. Please add your API key in Settings." : msg);
+        if (msg.includes("No HeyGen API key")) {
+          return {
+            avatars: [],
+            configured: false,
+            message: "No HeyGen API key configured. Please add your API key in Settings.",
+          };
+        }
+        throw new Error(msg);
       }
       if (data?.error) throw new Error(data.error);
-      const avatars: HeyGenAvatar[] = data?.data?.avatars || [];
-      return avatars;
+      return {
+        avatars: data?.data?.avatars || [],
+        configured: data?.configured ?? true,
+        message: data?.message,
+      };
     },
     staleTime: 5 * 60 * 1000,
     retry: false,
     enabled,
   });
+
+  return {
+    ...query,
+    data: query.data?.avatars ?? [],
+    missingKey: query.data ? !query.data.configured : false,
+    missingKeyMessage: query.data?.message,
+  };
 }
