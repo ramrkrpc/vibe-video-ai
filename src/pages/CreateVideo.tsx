@@ -196,6 +196,11 @@ const CreateVideo = () => {
               )}
             </CardContent>
           </Card>
+          <Card className="glass mt-4">
+            <CardContent className="pt-6">
+              <BackgroundPicker background={background} onChange={setBackground} />
+            </CardContent>
+          </Card>
         </motion.div>
       )}
 
@@ -351,6 +356,15 @@ const CreateVideo = () => {
                 <div className="flex justify-between"><span className="text-muted-foreground">Aspect Ratio</span><span className="text-foreground">{ratio}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Est. Duration</span><span className="text-foreground">~{estimatedDuration}s</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Words</span><span className="text-foreground">{wordCount}</span></div>
+                {background.type !== "none" && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Background</span>
+                    <span className="text-foreground capitalize flex items-center gap-2">
+                      {background.type === "color" && <span className="w-4 h-4 rounded border border-border inline-block" style={{ backgroundColor: background.value }} />}
+                      {background.type === "color" ? background.value : "Image"}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="border-t border-border pt-3">
                 <p className="text-xs text-muted-foreground mb-1">Script Preview</p>
