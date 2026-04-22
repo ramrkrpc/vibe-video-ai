@@ -1,21 +1,82 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile, useUpdateProfile } from "@/hooks/use-profile";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { User, Key, CreditCard, Shield } from "lucide-react";
+import { User, Key, CreditCard, Shield, Check, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const SettingsPage = () => {
   const { user } = useAuth();
-  const [fullName, setFullName] = useState(user?.user_metadata?.full_name || "");
+  const { data: profile, isLoading } = useProfile();
+  const updateProfile = useUpdateProfile();
 
-  const handleSave = () => {
-    toast.success("Settings saved!");
+  const [fullName, setFullName] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name || "");
+      setApiKey(profile.heygen_api_key || "");
+    }
+  }, [profile]);
+
+  const handleSaveProfile = async () => {
+    try {
+      await updateProfile.mutateAsync({ full_name: fullName });
+      toast.success("Profile updated!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save profile");
+    }
   };
+
+  const handleSaveApiKey = async () => {
+    try {
+      await updateProfile.mutateAsync({ heygen_api_key: apiKey });
+      toast.success("API key saved!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save API key");
+    }
+  };
+
+  const handleResetPassword = async () => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        user?.email || "",
+        { redirectTo: `${window.location.origin}/auth` }
+      );
+      if (error) throw error;
+      toast.success("Password reset email sent! Check your inbox.");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send reset email");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 max-w-3xl">
+        <div>
+          <Skeleton className="h-8 w-32 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="glass rounded-xl p-6">
+            <Skeleton className="h-5 w-24 mb-4" />
+            <Skeleton className="h-10 w-full mb-3" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -40,7 +101,17 @@ const SettingsPage = () => {
             <Label>Email</Label>
             <Input value={user?.email || ""} disabled className="opacity-60" />
           </div>
-          <Button onClick={handleSave} className="gradient-primary">Save Changes</Button>
+          <Button
+            onClick={handleSaveProfile}
+            className="gradient-primary"
+            disabled={updateProfile.isPending}
+          >
+            {updateProfile.isPending ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+            ) : (
+              <><Check className="w-4 h-4 mr-2" /> Save Changes</>
+            )}
+          </Button>
         </CardContent>
       </Card>
 
@@ -60,39 +131,39 @@ const SettingsPage = () => {
           </p>
           <div className="space-y-2">
             <Label>API Key</Label>
-            <Input type="password" placeholder="Enter your HeyGen API key" />
-          </div>
-          <Button variant="outline" onClick={() => toast.success("API key saved!")}>
-            Save API Key
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Subscription */}
-      <Card className="glass">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <CreditCard className="w-4 h-4 text-primary" /> Plan & Usage
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-3">
-            <Badge className="gradient-primary border-0">Pro Plan</Badge>
-            <span className="text-sm text-muted-foreground">$24/month</span>
-          </div>
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-muted-foreground">API Credits Used</span>
-              <span className="text-foreground">75 / 100</span>
+            <div className="relative">
+              <Input
+                type={showApiKey ? "text" : "password"}
+                placeholder="Enter your HeyGen API key"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                className="pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full px-3"
+                onClick={() => setShowApiKey(!showApiKey)}
+              >
+                {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </Button>
             </div>
-            <Progress value={75} className="h-2" />
           </div>
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-muted-foreground">Videos This Month</span>
-              <span className="text-foreground">12 / 50</span>
-            </div>
-            <Progress value={24} className="h-2" />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleSaveApiKey}
+              disabled={updateProfile.isPending}
+            >
+              {updateProfile.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Save API Key
+            </Button>
+            {profile?.heygen_api_key && (
+              <Badge className="bg-success/10 text-success border-0">
+                <Check className="w-3 h-3 mr-1" /> Connected
+              </Badge>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -104,8 +175,13 @@ const SettingsPage = () => {
             <Shield className="w-4 h-4 text-primary" /> Security
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <Button variant="outline">Change Password</Button>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Request a password reset link to change your password.
+          </p>
+          <Button variant="outline" onClick={handleResetPassword}>
+            Send Password Reset Email
+          </Button>
         </CardContent>
       </Card>
     </div>
