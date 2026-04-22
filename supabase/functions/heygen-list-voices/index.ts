@@ -41,8 +41,12 @@ serve(async (req) => {
 
     const apiKey = profile?.heygen_api_key || Deno.env.get("HEYGEN_API_KEY");
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: "No HeyGen API key configured" }), {
-        status: 400,
+      return new Response(JSON.stringify({
+        configured: false,
+        message: "No HeyGen API key configured. Please add your API key in Settings.",
+        data: { voices: [] },
+      }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -53,7 +57,7 @@ serve(async (req) => {
 
     const data = await heygenRes.json();
 
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify({ ...data, configured: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

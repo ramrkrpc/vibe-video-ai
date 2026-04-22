@@ -21,7 +21,7 @@ const Avatars = () => {
   const [search, setSearch] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState<HeyGenAvatar | null>(null);
   const navigate = useNavigate();
-  const { data: avatars, isLoading, error } = useAvatars();
+  const { data: avatars, isLoading, error, missingKey, missingKeyMessage } = useAvatars();
 
   const filtered = (avatars || []).filter((a) =>
     a.avatar_name?.toLowerCase().includes(search.toLowerCase())
@@ -40,8 +40,8 @@ const Avatars = () => {
         </div>
         <EmptyState
           icon={AlertCircle}
-          title="Could not load avatars"
-          description={error.message || "Make sure your HeyGen API key is configured in Settings"}
+          title={missingKey ? "HeyGen API Key Required" : "Could not load avatars"}
+          description={missingKeyMessage || error.message || "Make sure your HeyGen API key is configured in Settings"}
           actionLabel="Go to Settings"
           onAction={() => navigate("/settings")}
         />
