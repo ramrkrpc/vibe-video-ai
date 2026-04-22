@@ -210,9 +210,11 @@ const CreateVideo = () => {
                 <Label>Title</Label>
                 <Input placeholder="Enter a title for your video" value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1" />
               </div>
-              <div>
+              <div className="flex items-center justify-between">
                 <Label>Script</Label>
-                <Textarea
+                <AIScriptGenerator onGenerated={(s) => setScript(s)} />
+              </div>
+              <Textarea
                   placeholder="Type your video script here... The avatar will speak this text."
                   value={script}
                   onChange={(e) => setScript(e.target.value)}
