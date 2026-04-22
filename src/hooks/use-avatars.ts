@@ -10,7 +10,11 @@ export interface HeyGenAvatar {
   preview_video_url?: string;
 }
 
-export function useAvatars() {
+interface UseAvatarsOptions {
+  enabled?: boolean;
+}
+
+export function useAvatars({ enabled = true }: UseAvatarsOptions = {}) {
   return useQuery({
     queryKey: ["avatars"],
     queryFn: async () => {
@@ -25,5 +29,6 @@ export function useAvatars() {
     },
     staleTime: 5 * 60 * 1000,
     retry: false,
+    enabled,
   });
 }

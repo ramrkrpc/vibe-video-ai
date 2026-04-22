@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { BackgroundPicker, type BackgroundConfig } from "@/components/BackgroundPicker";
 import { AIScriptGenerator } from "@/components/AIScriptGenerator";
 import { SaveAsTemplate } from "@/components/SaveAsTemplate";
+import { useProfile } from "@/hooks/use-profile";
 
 const steps = ["Avatar", "Script", "Voice & Settings", "Review"];
 
@@ -42,11 +43,17 @@ const CreateVideo = () => {
   const [background, setBackground] = useState<BackgroundConfig>({ type: "none", value: "" });
   const [previewAudioUrl, setPreviewAudioUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { data: profile, isLoading: profileLoading } = useProfile();
+  const hasHeyGenApiKey = Boolean(profile?.heygen_api_key);
 
-  const { data: avatars, isLoading: avatarsLoading, error: avatarsError } = useAvatars();
-  const { data: voices, isLoading: voicesLoading, error: voicesError } = useVoices();
+  const { data: avatars, isLoading: avatarsLoading, error: avatarsError } = useAvatars({
+    enabled: !profileLoading && hasHeyGenApiKey,
+  });
+  const { data: voices, isLoading: voicesLoading, error: voicesError } = useVoices({
+    enabled: !profileLoading && hasHeyGenApiKey,
+  });
 
-  const apiKeyMissing = avatarsError?.message?.includes("API key") || voicesError?.message?.includes("API key");
+  const apiKeyMissing = !profileLoading && !hasHeyGenApiKey;
 
   const filteredAvatars = (avatars || []).filter((a) =>
     a.avatar_name?.toLowerCase().includes(avatarSearch.toLowerCase())

@@ -12,7 +12,11 @@ export interface HeyGenVoice {
   emotion_support?: boolean;
 }
 
-export function useVoices() {
+interface UseVoicesOptions {
+  enabled?: boolean;
+}
+
+export function useVoices({ enabled = true }: UseVoicesOptions = {}) {
   return useQuery({
     queryKey: ["voices"],
     queryFn: async () => {
@@ -27,5 +31,6 @@ export function useVoices() {
     },
     staleTime: 5 * 60 * 1000,
     retry: false,
+    enabled,
   });
 }
