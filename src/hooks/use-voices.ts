@@ -12,20 +12,48 @@ export interface HeyGenVoice {
   emotion_support?: boolean;
 }
 
-export function useVoices() {
-  return useQuery({
+interface UseVoicesOptions {
+  enabled?: boolean;
+}
+
+interface HeyGenVoicesQueryResult {
+  voices: HeyGenVoice[];
+  configured: boolean;
+  message?: string;
+}
+
+export function useVoices({ enabled = true }: UseVoicesOptions = {}) {
+  const query = useQuery<HeyGenVoicesQueryResult>({
     queryKey: ["voices"],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("heygen-list-voices");
       if (error) {
         const msg = await getFunctionErrorMessage(error, "Failed to load voices");
-        throw new Error(msg.includes("No HeyGen API key") ? "No HeyGen API key configured. Please add your API key in Settings." : msg);
+        if (msg.includes("No HeyGen API key")) {
+          return {
+            voices: [],
+            configured: false,
+            message: "No HeyGen API key configured. Please add your API key in Settings.",
+          };
+        }
+        throw new Error(msg);
       }
       if (data?.error) throw new Error(data.error);
-      const voices: HeyGenVoice[] = data?.data?.voices || [];
-      return voices;
+      return {
+        voices: data?.data?.voices || [],
+        configured: data?.configured ?? true,
+        message: data?.message,
+      };
     },
     staleTime: 5 * 60 * 1000,
     retry: false,
+    enabled,
   });
+
+  return {
+    ...query,
+    data: query.data?.voices ?? [],
+    missingKey: query.data ? !query.data.configured : false,
+    missingKeyMessage: query.data?.message,
+  };
 }

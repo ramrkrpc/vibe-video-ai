@@ -43,10 +43,23 @@ const CreateVideo = () => {
   const [previewAudioUrl, setPreviewAudioUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const { data: avatars, isLoading: avatarsLoading, error: avatarsError } = useAvatars();
-  const { data: voices, isLoading: voicesLoading, error: voicesError } = useVoices();
+  const {
+    data: avatars,
+    isLoading: avatarsLoading,
+    error: avatarsError,
+    missingKey: avatarsMissingKey,
+    missingKeyMessage: avatarsMissingKeyMessage,
+  } = useAvatars();
+  const {
+    data: voices,
+    isLoading: voicesLoading,
+    error: voicesError,
+    missingKey: voicesMissingKey,
+    missingKeyMessage: voicesMissingKeyMessage,
+  } = useVoices();
 
-  const apiKeyMissing = avatarsError?.message?.includes("API key") || voicesError?.message?.includes("API key");
+  const apiKeyMissing = avatarsMissingKey || voicesMissingKey;
+  const apiKeyMessage = avatarsMissingKeyMessage || voicesMissingKeyMessage || "Add your HeyGen API key in Settings to start creating videos.";
 
   const filteredAvatars = (avatars || []).filter((a) =>
     a.avatar_name?.toLowerCase().includes(avatarSearch.toLowerCase())
@@ -127,7 +140,7 @@ const CreateVideo = () => {
         <EmptyState
           icon={AlertCircle}
           title="HeyGen API Key Required"
-          description="Add your HeyGen API key in Settings to start creating videos."
+          description={apiKeyMessage}
           actionLabel="Go to Settings"
           onAction={() => navigate("/settings")}
         />
