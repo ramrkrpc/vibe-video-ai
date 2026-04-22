@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Mic, Settings2, Play, Loader2, Wand2, Monitor, Smartphone, ChevronRight, ChevronLeft, Check, Volume2, AlertCircle, Save } from "lucide-react";
+import { User, Mic, Settings2, Play, Loader2, Wand2, Monitor, Smartphone, ChevronRight, ChevronLeft, Check, Volume2, AlertCircle, Save, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useCreateVideo } from "@/hooks/use-videos";
 import { useVoices, type HeyGenVoice } from "@/hooks/use-voices";
 import { useAvatars, type HeyGenAvatar } from "@/hooks/use-avatars";
+import { useFishAudioTTS } from "@/hooks/use-fish-audio";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { BackgroundPicker, type BackgroundConfig } from "@/components/BackgroundPicker";
@@ -25,6 +26,7 @@ const CreateVideo = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const createVideo = useCreateVideo();
+  const fishTTS = useFishAudioTTS();
 
   const [step, setStep] = useState(0);
   const [title, setTitle] = useState(searchParams.get("title") || "");
@@ -38,6 +40,7 @@ const CreateVideo = () => {
   const [avatarSearch, setAvatarSearch] = useState("");
   const [voiceSearch, setVoiceSearch] = useState("");
   const [background, setBackground] = useState<BackgroundConfig>({ type: "none", value: "" });
+  const [previewAudioUrl, setPreviewAudioUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { data: avatars, isLoading: avatarsLoading, error: avatarsError } = useAvatars();
@@ -86,6 +89,23 @@ const CreateVideo = () => {
     if (audioRef.current) { audioRef.current.pause(); }
     audioRef.current = new Audio(previewUrl);
     audioRef.current.play().catch(() => {});
+  };
+
+  const handlePreviewScript = async () => {
+    if (!script.trim()) { toast.error("Enter a script to preview"); return; }
+    try {
+      const url = await fishTTS.mutateAsync({
+        text: script.trim().slice(0, 500),
+        voice_id: voice || "default",
+      });
+      setPreviewAudioUrl(url);
+      if (audioRef.current) audioRef.current.pause();
+      audioRef.current = new Audio(url);
+      audioRef.current.play().catch(() => {});
+      toast.success("Playing script preview");
+    } catch (err: any) {
+      toast.error(err.message || "Script preview requires Fish Audio API key in Settings");
+    }
   };
 
   const canProceed = () => {
@@ -221,7 +241,23 @@ const CreateVideo = () => {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <Label>Script</Label>
-                  <AIScriptGenerator onGenerated={(s) => setScript(s)} />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePreviewScript}
+                      disabled={fishTTS.isPending || !script.trim()}
+                      className="text-xs"
+                    >
+                      {fishTTS.isPending ? (
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      ) : (
+                        <Headphones className="w-3 h-3 mr-1" />
+                      )}
+                      Preview Audio
+                    </Button>
+                    <AIScriptGenerator onGenerated={(s) => setScript(s)} />
+                  </div>
                 </div>
                 <Textarea
                   placeholder="Type your video script here... The avatar will speak this text."

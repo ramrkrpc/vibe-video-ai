@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { User, Key, CreditCard, Shield, Check, Loader2, Eye, EyeOff } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { User, Key, Shield, Check, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -18,14 +18,19 @@ const SettingsPage = () => {
   const updateProfile = useUpdateProfile();
 
   const [fullName, setFullName] = useState("");
-  const [apiKey, setApiKey] = useState("");
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
+  const [heygenKey, setHeygenKey] = useState("");
+  const [fishAudioKey, setFishAudioKey] = useState("");
+  const [didKey, setDidKey] = useState("");
+  const [syncLabsKey, setSyncLabsKey] = useState("");
+  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (profile) {
       setFullName(profile.full_name || "");
-      setApiKey(profile.heygen_api_key || "");
+      setHeygenKey(profile.heygen_api_key || "");
+      setFishAudioKey(profile.fish_audio_api_key || "");
+      setDidKey(profile.did_api_key || "");
+      setSyncLabsKey(profile.sync_labs_api_key || "");
     }
   }, [profile]);
 
@@ -38,12 +43,12 @@ const SettingsPage = () => {
     }
   };
 
-  const handleSaveApiKey = async () => {
+  const handleSaveKey = async (field: string, value: string, label: string) => {
     try {
-      await updateProfile.mutateAsync({ heygen_api_key: apiKey });
-      toast.success("API key saved!");
+      await updateProfile.mutateAsync({ [field]: value } as any);
+      toast.success(`${label} key saved!`);
     } catch (err: any) {
-      toast.error(err.message || "Failed to save API key");
+      toast.error(err.message || `Failed to save ${label} key`);
     }
   };
 
@@ -59,6 +64,8 @@ const SettingsPage = () => {
       toast.error(err.message || "Failed to send reset email");
     }
   };
+
+  const toggleShow = (key: string) => setShowKeys((prev) => ({ ...prev, [key]: !prev[key] }));
 
   if (isLoading) {
     return (
@@ -78,11 +85,78 @@ const SettingsPage = () => {
     );
   }
 
+  const ApiKeyField = ({
+    label,
+    description,
+    link,
+    linkLabel,
+    value,
+    onChange,
+    fieldKey,
+    fieldId,
+    connected,
+  }: {
+    label: string;
+    description: string;
+    link: string;
+    linkLabel: string;
+    value: string;
+    onChange: (v: string) => void;
+    fieldKey: string;
+    fieldId: string;
+    connected: boolean;
+  }) => (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        {description}{" "}
+        <a href={link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+          {linkLabel}
+        </a>
+      </p>
+      <div className="space-y-2">
+        <Label>API Key</Label>
+        <div className="relative">
+          <Input
+            type={showKeys[fieldKey] ? "text" : "password"}
+            placeholder={`Enter your ${label} API key`}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="pr-10"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-0 top-0 h-full px-3"
+            onClick={() => toggleShow(fieldKey)}
+          >
+            {showKeys[fieldKey] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </Button>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          onClick={() => handleSaveKey(fieldId, value, label)}
+          disabled={updateProfile.isPending}
+        >
+          {updateProfile.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+          Save API Key
+        </Button>
+        {connected && (
+          <Badge className="bg-success/10 text-success border-0">
+            <Check className="w-3 h-3 mr-1" /> Connected
+          </Badge>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your account and preferences</p>
+        <p className="text-muted-foreground mt-1">Manage your account and API integrations</p>
       </div>
 
       {/* Profile */}
@@ -115,56 +189,90 @@ const SettingsPage = () => {
         </CardContent>
       </Card>
 
-      {/* API Key */}
+      {/* API Keys - Tabbed */}
       <Card className="glass">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Key className="w-4 h-4 text-primary" /> HeyGen API Key
+            <Key className="w-4 h-4 text-primary" /> API Integrations
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Enter your HeyGen API key to enable video generation. Get your key from{" "}
-            <a href="https://app.heygen.com/settings" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-              app.heygen.com/settings
-            </a>
-          </p>
-          <div className="space-y-2">
-            <Label>API Key</Label>
-            <div className="relative">
-              <Input
-                type={showApiKey ? "text" : "password"}
-                placeholder="Enter your HeyGen API key"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                className="pr-10"
+        <CardContent>
+          <Tabs defaultValue="heygen" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="heygen" className="text-xs">
+                HeyGen
+                {profile?.heygen_api_key && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-success inline-block" />}
+              </TabsTrigger>
+              <TabsTrigger value="fish" className="text-xs">
+                Fish Audio
+                {profile?.fish_audio_api_key && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-success inline-block" />}
+              </TabsTrigger>
+              <TabsTrigger value="did" className="text-xs">
+                D-ID
+                {profile?.did_api_key && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-success inline-block" />}
+              </TabsTrigger>
+              <TabsTrigger value="sync" className="text-xs">
+                Sync Labs
+                {profile?.sync_labs_api_key && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-success inline-block" />}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="heygen" className="mt-4">
+              <ApiKeyField
+                label="HeyGen"
+                description="Avatar video generation. Get your key from"
+                link="https://app.heygen.com/settings"
+                linkLabel="app.heygen.com/settings"
+                value={heygenKey}
+                onChange={setHeygenKey}
+                fieldKey="heygen"
+                fieldId="heygen_api_key"
+                connected={!!profile?.heygen_api_key}
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full px-3"
-                onClick={() => setShowApiKey(!showApiKey)}
-              >
-                {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </Button>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={handleSaveApiKey}
-              disabled={updateProfile.isPending}
-            >
-              {updateProfile.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Save API Key
-            </Button>
-            {profile?.heygen_api_key && (
-              <Badge className="bg-success/10 text-success border-0">
-                <Check className="w-3 h-3 mr-1" /> Connected
-              </Badge>
-            )}
-          </div>
+            </TabsContent>
+
+            <TabsContent value="fish" className="mt-4">
+              <ApiKeyField
+                label="Fish Audio"
+                description="Affordable TTS ($0.015/1K chars). Get your key from"
+                link="https://fish.audio/account"
+                linkLabel="fish.audio/account"
+                value={fishAudioKey}
+                onChange={setFishAudioKey}
+                fieldKey="fish"
+                fieldId="fish_audio_api_key"
+                connected={!!profile?.fish_audio_api_key}
+              />
+            </TabsContent>
+
+            <TabsContent value="did" className="mt-4">
+              <ApiKeyField
+                label="D-ID"
+                description="Photo-to-video avatars. Get your key from"
+                link="https://studio.d-id.com/account-settings"
+                linkLabel="studio.d-id.com/account-settings"
+                value={didKey}
+                onChange={setDidKey}
+                fieldKey="did"
+                fieldId="did_api_key"
+                connected={!!profile?.did_api_key}
+              />
+            </TabsContent>
+
+            <TabsContent value="sync" className="mt-4">
+              <ApiKeyField
+                label="Sync Labs"
+                description="Lip-sync & dubbing ($0.035/sec, free tier). Get your key from"
+                link="https://app.synclabs.so/settings"
+                linkLabel="app.synclabs.so/settings"
+                value={syncLabsKey}
+                onChange={setSyncLabsKey}
+                fieldKey="sync"
+                fieldId="sync_labs_api_key"
+                connected={!!profile?.sync_labs_api_key}
+              />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
